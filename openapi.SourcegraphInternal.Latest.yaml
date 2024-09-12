@@ -1,0 +1,207 @@
+openapi: 3.0.0
+info:
+  title: Sourcegraph Internal API
+  version: Latest
+tags: []
+paths:
+  /.api/client-config:
+    get:
+      operationId: getClientConfig
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientConfig'
+  /.api/modelconfig/supported-models.json:
+    get:
+      operationId: getSupportedModels
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelCatalog'
+components:
+  schemas:
+    ClientConfig:
+      type: object
+      required:
+        - codyEnabled
+        - chatEnabled
+        - autoCompleteEnabled
+        - customCommandsEnabled
+        - attributionEnabled
+        - smartContextWindowEnabled
+        - modelsAPIEnabled
+      properties:
+        codyEnabled:
+          type: boolean
+          description: Whether the site admin allows this user to make use of Cody at all.
+        chatEnabled:
+          type: boolean
+          description: Whether the site admin allows this user to make use of the Cody chat feature.
+        autoCompleteEnabled:
+          type: boolean
+          description: Whether the site admin allows this user to make use of the Cody autocomplete feature.
+        customCommandsEnabled:
+          type: boolean
+          description: Whether the site admin allows the user to make use of the **custom** Cody commands feature.
+        attributionEnabled:
+          type: boolean
+          description: Whether the site admin allows this user to make use of the Cody attribution feature.
+        smartContextWindowEnabled:
+          type: boolean
+          description: |-
+            Whether the 'smart context window' feature should be enabled, and whether the Sourcegraph
+            instance supports various new GraphQL APIs needed to make it work.
+        modelsAPIEnabled:
+          type: boolean
+          description: |-
+            Whether the new Sourcegraph backend LLM models API endpoint should be used to query which
+            models are available.
+        latestSupportedCompletionsStreamAPIVersion:
+          type: integer
+          format: int32
+          description: |-
+            The latest `api-version=N` query parameter that is supported by the
+            `POST /.api/completions/stream` endpoint. This field was added after
+            `api-version=2` so you will never get a response with `api-version=1` or
+            lower even when `api-version=1` is supported on the instance.
+      description: |-
+        This is the JSON object which all clients request after authentication to determine how
+        they should behave, e.g. if a site admin has restricted chat/autocomplete/other functionality,
+        if experimental features are available, etc.
+
+        The configuration is always specific to a single authenticated user.
+
+        Adding new fields here is fine, but you cannot make backwards-incompatible changes (removing
+        fields or change the meaning of fields in backwards-incompatible ways.) If you need to do that,
+        then read up on https://github.com/sourcegraph/sourcegraph/pull/63591#discussion_r1663211601
+
+        After adding a field here, you can implement it in cmd/frontend/internal/clientconfig/clientconfig.go
+        GetForActor method.
+    ContextWindow:
+      type: object
+      required:
+        - maxInputTokens
+        - maxOutputTokens
+      properties:
+        maxInputTokens:
+          type: integer
+          format: int32
+        maxOutputTokens:
+          type: integer
+          format: int32
+    DefaultModels:
+      type: object
+      required:
+        - chat
+        - fastChat
+        - codeCompletion
+      properties:
+        chat:
+          type: string
+        fastChat:
+          type: string
+        codeCompletion:
+          type: string
+    Model:
+      type: object
+      required:
+        - modelRef
+        - displayName
+        - modelName
+        - capabilities
+        - category
+        - status
+        - tier
+        - contextWindow
+      properties:
+        modelRef:
+          type: string
+        displayName:
+          type: string
+        modelName:
+          type: string
+        capabilities:
+          type: array
+          items:
+            $ref: '#/components/schemas/ModelCapability'
+        category:
+          $ref: '#/components/schemas/ModelCategory'
+        status:
+          $ref: '#/components/schemas/ModelStatus'
+        tier:
+          $ref: '#/components/schemas/ModelTier'
+        contextWindow:
+          $ref: '#/components/schemas/ContextWindow'
+    ModelCapability:
+      type: string
+      enum:
+        - autocomplete
+        - chat
+    ModelCatalog:
+      type: object
+      required:
+        - schemaVersion
+        - revision
+        - providers
+        - models
+        - defaultModels
+      properties:
+        schemaVersion:
+          type: string
+        revision:
+          type: string
+        providers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Provider'
+        models:
+          type: array
+          items:
+            $ref: '#/components/schemas/Model'
+        defaultModels:
+          $ref: '#/components/schemas/DefaultModels'
+    ModelCategory:
+      type: string
+      enum:
+        - accuracy
+        - balanced
+        - speed
+    ModelStatus:
+      type: string
+      enum:
+        - experimental
+        - beta
+        - stable
+        - deprecated
+    ModelTier:
+      type: string
+      enum:
+        - free
+        - pro
+        - enterprise
+    Provider:
+      type: object
+      required:
+        - id
+        - displayName
+      properties:
+        id:
+          type: string
+        displayName:
+          type: string
+    Versions:
+      type: string
+      enum:
+        - V5_5
+        - V5_6
+        - V5_7
+        - V5_8
+        - Latest
