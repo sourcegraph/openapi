@@ -23,16 +23,26 @@ paths:
         - name: api-version
           in: query
           required: false
+          description: |-
+            What API version to use for this request.
+
+            - `api-version=undefined` the original completions API. Don't use this.
+            - `api-version=1` added support for system prompts. Uses `'completion'`
+            property for streaming responses..
+            - `api-version=2` added support for incremental streaming response. Uses
+            `'deltaText'` instead of `'completion'` property.
           schema:
             $ref: '#/components/schemas/CompletionRequestApiVersion'
         - name: client-name
           in: query
           required: false
+          description: The name of the application sending this request. For example, "cody-web" or "jetbrains".
           schema:
             type: string
         - name: client-version
           in: query
           required: false
+          description: The version of the application sending this request. For example, "2.0.0".
           schema:
             type: string
       responses:
@@ -41,7 +51,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CompletionResponse'
+                anyOf:
+                  - $ref: '#/components/schemas/CompletionResponse'
+                  - $ref: '#/components/schemas/CompletionResponse'
       requestBody:
         required: true
         content:
@@ -56,16 +68,26 @@ paths:
         - name: api-version
           in: query
           required: false
+          description: |-
+            What API version to use for this request.
+
+            - `api-version=undefined` the original completions API. Don't use this.
+            - `api-version=1` added support for system prompts. Uses `'completion'`
+            property for streaming responses..
+            - `api-version=2` added support for incremental streaming response. Uses
+            `'deltaText'` instead of `'completion'` property.
           schema:
             $ref: '#/components/schemas/CompletionRequestApiVersion'
         - name: client-name
           in: query
           required: false
+          description: The name of the application sending this request. For example, "cody-web" or "jetbrains".
           schema:
             type: string
         - name: client-version
           in: query
           required: false
+          description: The version of the application sending this request. For example, "2.0.0".
           schema:
             type: string
       responses:
@@ -74,7 +96,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CompletionResponse'
+                anyOf:
+                  - $ref: '#/components/schemas/CompletionResponse'
+                  - $ref: '#/components/schemas/CompletionResponse'
       requestBody:
         required: true
         content:
@@ -174,39 +198,87 @@ components:
     CompletionRequest:
       type: object
       required:
-        - prompt
         - model
         - messages
       properties:
-        prompt:
-          type: string
         model:
           type: string
+          description: |-
+            The language model to use for the completion.
+            Call `/.api/modelconfig/supported-models.json` to get the list of available models.
         messages:
           type: array
           items:
             $ref: '#/components/schemas/CompletionMessage'
+          description: |-
+            The messages to generate completions for.
+            When using `/.api/completions/code`, only include one message with the speaker 'human'.
         maxTokensToSample:
           type: integer
           format: int32
+          description: |-
+            The maximum number of tokens to generate before stopping.
+            Note that our models may stop before reaching this maximum. This parameter only specifies the absolute maximum number of tokens to generate.
         temperature:
           type: number
           format: float
+          description: |-
+            Amount of randomness injected into the response.
+
+            Defaults to 1.0. Ranges from 0.0 to 1.0. Use temperature closer to 0.0
+            for analytical / multiple choice, and closer to 1.0 for creative and
+            generative tasks.
+
+            Note that even with temperature of 0.0, the results will not be fully
+            deterministic.
         stopSequences:
           type: array
           items:
             type: string
+          description: |-
+            Sequences that will cause the model to stop generating.
+
+            Our models stop on "\n\nHuman:", and may include additional built-in stop
+            sequences in the future. By providing the `stop_sequences` parameter, you may
+            include additional strings that will cause the model to stop generating.
         topK:
           type: integer
           format: int32
+          description: |-
+            Only sample from the top K options for each subsequent token.
+
+            Used to remove "long tail" low probability responses. Learn more technical details here:
+            https://towardsdatascience.com/how-to-sample-from-language-models-682bceb97277
+
+            Recommended for advanced use cases only. You usually only need to use temperature.
         topP:
           type: number
           format: float
+          description: |-
+            Use nucleus sampling.
+
+            In nucleus sampling, we compute the cumulative distribution over all the
+            options for each subsequent token in decreasing probability order and cut it
+            off once it reaches a particular probability specified by `top_p`. You should
+            either alter temperature or `top_p`, but not both.
+
+            Recommended for advanced use cases only. You usually only need to use temperature.
         stream:
           type: boolean
+          nullable: true
+          description: |-
+            Whether to stream the response.
+
+            - When true, the response body is an SSE stream of `event: completion\ndata: JSON` where
+            each JSON blob is a `CompletionResponse`.
+            - When false, the response body is a single JSON-encoded `CompletionResponse`.
         logprobs:
           type: integer
           format: uint8
+          description: |-
+            Include the log probabilities on the logprobs most likely tokens, as well the chosen tokens. For example, if logprobs is 5, the API will return a list of the 5 most likely tokens. The API will always return the logprob of the sampled token, so there may be up to logprobs+1 elements in the response.
+            The maximum value for logprobs is 5.
+            For more details, see Fireworks API docs https://docs.fireworks.ai/api-reference/post-completions
     CompletionRequestApiVersion:
       type: number
       enum:
