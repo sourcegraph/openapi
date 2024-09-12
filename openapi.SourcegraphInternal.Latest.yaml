@@ -15,6 +15,72 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ClientConfig'
+  /.api/completions/code:
+    post:
+      operationId: Completions_completions
+      summary: Get LLM completions as a non-streaming response
+      parameters:
+        - name: api-version
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/CompletionRequestApiVersion'
+        - name: client-name
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: client-version
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompletionResponse'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompletionRequest'
+  /.api/completions/stream:
+    post:
+      operationId: Completions_chatCompletions
+      summary: Get streaming LLM completions with SSE
+      parameters:
+        - name: api-version
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/CompletionRequestApiVersion'
+        - name: client-name
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: client-version
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompletionResponse'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompletionRequest'
   /.api/modelconfig/supported-models.json:
     get:
       operationId: getSupportedModels
@@ -85,6 +151,104 @@ components:
 
         After adding a field here, you can implement it in cmd/frontend/internal/clientconfig/clientconfig.go
         GetForActor method.
+    CompletionMessage:
+      type: object
+      required:
+        - speaker
+        - text
+      properties:
+        speaker:
+          type: string
+          description: |-
+            The speaker of the message.
+
+            For historical reasons, this API uses Anthropic naming conventions.  The
+            valid values are:
+
+            - "human" (Anthropic) instead of "role: user" (OpenAI).
+            - "assistant", same as OpenAI's "role: assistant"
+            - "system", same as OpenAI's "role: system"
+        text:
+          type: string
+          description: The text of the message.
+    CompletionRequest:
+      type: object
+      required:
+        - prompt
+        - model
+        - messages
+      properties:
+        prompt:
+          type: string
+        model:
+          type: string
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompletionMessage'
+        maxTokensToSample:
+          type: integer
+          format: int32
+        temperature:
+          type: number
+          format: float
+        stopSequences:
+          type: array
+          items:
+            type: string
+        topK:
+          type: integer
+          format: int32
+        topP:
+          type: number
+          format: float
+        stream:
+          type: boolean
+        logprobs:
+          type: integer
+          format: uint8
+    CompletionRequestApiVersion:
+      type: number
+      enum:
+        - 1
+        - 2
+    CompletionResponse:
+      type: object
+      properties:
+        completion:
+          type: string
+          description: |-
+            Completion is the full completion string. This field
+            is only present when using the `/.api/completions/code` or when
+            using `api-version=1` or older with `/.api/completions/stream`.
+
+            In the V2 API for streaming responses, the `deltaText` property is used
+            instead.
+        deltaText:
+          type: string
+          description: |-
+            DeltaText is the incremental text that was added to the prompt.
+            This field is only present in streaming responses to `/.api/completions/stream`.
+        stopReason:
+          type: string
+          description: |-
+            The reason the model stopped generating tokens. The exact format
+            of this field is defined by the model provider.
+
+            For OpenAI models, the following stop reasons are defined:
+            - `stop`: the model hit a natural stop point or a provided stop sequence.
+            - `length`: the maximum number of tokens specified in the request was reached.
+            - `content_filter`: content was omitted due content filters.
+
+            For Anthropic models, the following stop reasons are defined:
+            - "stop_sequence": we reached a stop sequence either provided via the
+            stop_sequences parameter, or a stop sequence built into the model.
+            - "max_tokens": we exceeded max_tokens_to_sample or the model's maximum limit.
+        logprobs:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/Logprobs'
+          nullable: true
     ContextWindow:
       type: object
       required:
@@ -110,6 +274,35 @@ components:
           type: string
         codeCompletion:
           type: string
+    Logprobs:
+      type: object
+      required:
+        - tokens
+        - token_logprobs
+        - top_logprobs
+        - text_offset
+      properties:
+        tokens:
+          type: array
+          items:
+            type: string
+        token_logprobs:
+          type: array
+          items:
+            type: number
+            format: float
+        top_logprobs:
+          type: array
+          items:
+            type: object
+            additionalProperties:
+              type: number
+              format: float
+        text_offset:
+          type: array
+          items:
+            type: integer
+            format: int32
     Model:
       type: object
       required:

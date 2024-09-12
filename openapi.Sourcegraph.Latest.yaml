@@ -27,7 +27,7 @@ paths:
               $ref: '#/components/schemas/CodyContextRequest'
   /.api/llm/models:
     get:
-      operationId: Models_list
+      operationId: OAIModels_list
       description: Lists the currently available models, and provides basic information about each one such as the owner and availability.
       parameters: []
       responses:
@@ -36,7 +36,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ListModelsResponse'
+                $ref: '#/components/schemas/OAIListModelsResponse'
         default:
           description: An unexpected error response.
           content:
@@ -45,7 +45,7 @@ paths:
                 $ref: '#/components/schemas/Error'
   /.api/llm/models/{modelId}:
     get:
-      operationId: Models_retrieveModel
+      operationId: OAIModels_retrieveModel
       description: Retrieves a model instance, providing basic information about the model such as the owner and permissioning.
       parameters:
         - name: modelId
@@ -59,7 +59,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Model'
+                $ref: '#/components/schemas/OAIModel'
         default:
           description: An unexpected error response.
           content:
@@ -155,7 +155,7 @@ components:
           format: int32
         chunkContent:
           type: string
-    ListModelsResponse:
+    OAIListModelsResponse:
       type: object
       required:
         - object
@@ -168,8 +168,8 @@ components:
         data:
           type: array
           items:
-            $ref: '#/components/schemas/Model'
-    Model:
+            $ref: '#/components/schemas/OAIModel'
+    OAIModel:
       type: object
       required:
         - id
