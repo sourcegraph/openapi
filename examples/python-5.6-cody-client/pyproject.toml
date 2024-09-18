@@ -1,9 +1,13 @@
 [project]
 name = "python-cody-client"
 version = "0.1.0"
-description = "Add your description here"
+description = "Olaf Geirsson"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "requests>=2.32.3",
+    "sseclient-py",
+    "black",
+    "isort",
+    "pylint",
 ]
