@@ -8,7 +8,6 @@ import json
 import os
 
 import requests
-import sseclient
 
 access_token = os.getenv("SRC_ACCESS_TOKEN")
 if not access_token:
@@ -167,18 +166,17 @@ def chat_completions(query):
         )
         response.raise_for_status()
 
-        client = sseclient.SSEClient(response)
+        # The completions streaming API returns data in server-sent
+        # events format. We only need to capture the last "completion"
+        # event with which is followed by a "done" event with empty data.
+        # Practically this is the last line starting with r'^data: {"'
         last_response = ""
-        for event in client.events():
-            if event.data != "[DONE]":
-                try:
-                    event_data = json.loads(event.data)
-                    if "completion" in event_data:
-                        last_response = event_data["completion"]
-                except json.JSONDecodeError:
-                    print(f"Error decoding event data: {event.data}")
-
-        return last_response
+        for line in response.iter_lines(decode_unicode=True):
+            if line.startswith('data: {"'):
+                last_response = line[6:]
+        # last_response should look like:
+        # '{"completion": "... some answer ...", "stopReason": "stop"}'
+        return json.loads(last_response)["completion"]
 
     except requests.exceptions.RequestException as e:
         print(f"Request failed: {str(e)}")
