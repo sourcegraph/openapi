@@ -6,6 +6,7 @@ to provide context-aware responses based on repository content.
 import argparse
 import json
 import os
+import sys
 
 import requests
 
@@ -218,19 +219,20 @@ def main():
     parser.add_argument(
         "--context-repo",
         action="append",
-        help="Repository name (can be used multiple times)",
+        help="Repository name (can be used multiple times) [Optional]",
     )
     parser.add_argument("--message", type=str, help="Query message")
+
+    if len(sys.argv) == 1:
+        parser.print_help(sys.stderr)
+        sys.exit(1)
 
     args = parser.parse_args()
 
     if not args.message:
         raise ValueError("Error: --message argument is required.")
 
-    if not args.context_repo:
-        raise ValueError("Error: --context-repo argument is required.")
-
-    repo_names = args.context_repo
+    repo_names = args.context_repo or []
     query = args.message
     cody_chat(repo_names, query)
 
