@@ -2,9 +2,7 @@
 description: "My eval"
 
 prompts:
-  - "Write a tweet about {{topic}}"
-  - "Write a concise, funny tweet about {{topic}}"
-  
+  - file://prompt.py:code_reviewer
 
 providers:
   - "exec: node complete.js claude-3.5-sonnet"
@@ -13,21 +11,7 @@ providers:
 
 tests:
   - vars:
-      topic: bananas
-
+      dir: test-dir/typescript
   - vars:
-      topic: avocado toast
-    assert:
-      # For more information on assertions, see https://promptfoo.dev/docs/configuration/expected-outputs
-
-      # Make sure output contains the word "avocado"
-      - type: icontains
-        value: avocado
-
-      # Prefer shorter outputs
-      - type: javascript
-        value: 1 / (output.length + 1)
-
-  - vars:
-      topic: new york city
+      dir: test-dir/java
 

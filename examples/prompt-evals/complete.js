@@ -36,7 +36,7 @@ for (const model of models) {
 function log(msg) {
     fs.writeFileSync('log.txt', `${msg}\n`, { flag: 'a' })
 }
-log(JSON.stringify(process.argv))
+// log(JSON.stringify(process.argv))
 
 
 const prompt = process.argv[3]
