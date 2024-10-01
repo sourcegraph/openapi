@@ -74,7 +74,10 @@ Example usage:
                   instruction: reviewInstruction,
                 },
                 commit
-              )
+              ).catch((error) => {
+                console.error(`Failed to review commit ${commit.oid}`, error);
+                return [];
+              })
             )
           );
           for (const diagnostic of diagnostics.flat()) {
