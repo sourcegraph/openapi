@@ -1,0 +1,21 @@
+[project]
+name = "python-cody-client"
+version = "5.7"
+description = "Python API client for Sourcegraph Cody"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic",
+    "requests>=2.32.3",
+    "aiohttp",
+]
+[project.optional-dependencies]
+dev = [
+    "black",
+    "isort",
+    "pylint",
+    "ruff",
+]
+
+[tool.uv.workspace]
+members = ["help"]
