@@ -92,7 +92,10 @@ Example usage:
             )
           );
           for (const diagnostic of diagnostics.flat()) {
-            console.log(diagnostic);
+            console.log("----------------------------");
+            console.log(`URL ${diagnostic.url}`);
+            console.log(`FILEPATH ${diagnostic.filepath}`);
+            console.log(diagnostic.text);
           }
         }
       )

@@ -22,8 +22,7 @@ export async function review(
   console.log(`Reviewing commit: ${commit.label}`);
   const completion = await client.getCompletions({
     model: params.model,
-    message: `
-You are a helpful coding assistant.
+    message: `You are a helpful coding assistant reviewing a git commit.
 
 <AUTHOR>${commit.authorName}</AUTHOR>
 <AUTHOR_DATE>${commit.authorDate}</AUTHOR_DATE>
@@ -36,11 +35,13 @@ ${commit.content}
 ${params.instruction}
 </REVIEW_INSTRUCTION>
 
-Print out a list of diagnostics based on the review instruction. Each diagnostic should be formatted as XML
+Print out a list of diagnostics based on the review instruction.
+If there is nothing to act on the instruction (example: the diff is good)
+then don't print a diagnostic.
+Each diagnostic should be formatted as XML
 
 <DIAGNOSTIC filepath="$FILE_PATH">
-Act on the instruction. For example, if it says produce a diff to fix the bug, print the diff here. If the instruction says,
-come up with a test case, print the test case here. Formatted as markdown.
+Analysis taking into account the commit details and the review instruction. 
 </DIAGNOSTIC>
 `,
   });

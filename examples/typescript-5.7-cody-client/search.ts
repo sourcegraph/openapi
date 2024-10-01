@@ -13,7 +13,6 @@ export async function searchCommits(
     q: params.searchQuery,
     cl: String(params.contextLines),
   });
-  console.log({ url: urlParams.toString() });
   const response = await fetch(
     `${params.endpoint}/.api/search/stream/?${urlParams}`,
     {
@@ -59,10 +58,6 @@ export async function searchCommits(
         commitResults.push(match);
       }
     }
-  }
-  for (const commitResult of commitResults) {
-    console.log("===============");
-    console.log(commitResult.content);
   }
   return commitResults;
 }

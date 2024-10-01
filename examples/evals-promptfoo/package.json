@@ -1,0 +1,16 @@
+{
+  "name": "evals-promptfoo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "promptfoo": "^0.90.3",
+    "tsx": "^4.19.1"
+  }
+}

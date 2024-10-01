@@ -8,7 +8,6 @@ export class CodyClient {
     model: string;
   }): Promise<string> {
     const url = `${this.credentials.endpoint}/.api/completions/stream?api-version=1&client-name=openapi-examples&client-version=1.0.0`;
-    console.log({ url });
     const response = await fetch(url, {
       method: "POST",
       headers: {
