@@ -23,14 +23,6 @@ paths:
         - name: api-version
           in: query
           required: false
-          description: |-
-            What API version to use for this request.
-
-            - `api-version=undefined` the original completions API. Don't use this.
-            - `api-version=1` added support for system prompts. Uses `'completion'`
-            property for streaming responses..
-            - `api-version=2` added support for incremental streaming response. Uses
-            `'deltaText'` instead of `'completion'` property.
           schema:
             $ref: '#/components/schemas/CompletionRequestApiVersion'
         - name: client-name
@@ -68,14 +60,6 @@ paths:
         - name: api-version
           in: query
           required: false
-          description: |-
-            What API version to use for this request.
-
-            - `api-version=undefined` the original completions API. Don't use this.
-            - `api-version=1` added support for system prompts. Uses `'completion'`
-            property for streaming responses..
-            - `api-version=2` added support for incremental streaming response. Uses
-            `'deltaText'` instead of `'completion'` property.
           schema:
             $ref: '#/components/schemas/CompletionRequestApiVersion'
         - name: client-name
@@ -116,6 +100,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ModelCatalog'
+security:
+  - SourcegraphTokenAuth: []
 components:
   schemas:
     ClientConfig:
@@ -175,26 +161,178 @@ components:
 
         After adding a field here, you can implement it in cmd/frontend/internal/clientconfig/clientconfig.go
         GetForActor method.
+    ClientSideModelConfig:
+      type: object
+      properties:
+        openAICompatible:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/ClientSideModelConfigOpenAICompatible'
+          nullable: true
+      description: |-
+        Anything that needs to be provided to Cody clients at the model-level can go here.
+
+        For example, allowing the server to customize/override the LLM
+        prompt used. Or describe how clients should upload context to
+        remote servers, etc. Or "hints", like "this model is great when
+        working with 'C' code.".
+    ClientSideModelConfigOpenAICompatible:
+      type: object
+      properties:
+        stopSequences:
+          type: array
+          items:
+            type: string
+          description: (optional) List of stop sequences to use for this model.
+        endOfText:
+          type: string
+          description: (optional) EndOfText identifier used by the model. e.g. "<|endoftext|>", "< EOT >"
+        contextSizeHintTotalCharacters:
+          type: integer
+          format: uint32
+          nullable: true
+          minimum: 0
+          description: |-
+            (optional) A hint the client should use when producing context to send to the LLM.
+            The maximum length of all context (prefix + suffix + snippets), in characters.
+        contextSizeHintPrefixCharacters:
+          type: integer
+          format: uint32
+          nullable: true
+          minimum: 0
+          description: |-
+            (optional) A hint the client should use when producing context to send to the LLM.
+            The maximum length of the document prefix (text before the cursor) to include, in characters.
+        contextSizeHintSuffixCharacters:
+          type: integer
+          format: uint32
+          nullable: true
+          minimum: 0
+          description: |-
+            (optional) A hint the client should use when producing context to send to the LLM.
+            The maximum length of the document suffix (text after the cursor) to include, in characters.
+        chatPreInstruction:
+          type: string
+          description: |-
+            (optional) Custom instruction to be included at the start of all chat messages
+            when using this model, e.g. "Answer all questions in Spanish."
+
+            Note: similar to Cody client config option `cody.chat.preInstruction`; if user has
+            configured that it will be used instead of this.
+        editPostInstruction:
+          type: string
+          description: |-
+            (optional) Custom instruction to be included at the end of all edit commands
+            when using this model, e.g. "Write all unit tests with Jest instead of detected framework."
+
+            Note: similar to Cody client config option `cody.edit.preInstruction`; if user has
+            configured that it will be respected instead of this.
+        autocompleteSinglelineTimeout:
+          type: integer
+          format: uint32
+          minimum: 0
+          description: |-
+            (optional) How long the client should wait for autocomplete results to come back (milliseconds),
+            before giving up and not displaying an autocomplete result at all.
+
+            This applies on single-line completions, e.g. `var i = <completion>`
+
+            Note: similar to hidden Cody client config option `cody.autocomplete.advanced.timeout.singleline`
+            If user has configured that, it will be respected instead of this.
+        autocompleteMultilineTimeout:
+          type: integer
+          format: uint32
+          minimum: 0
+          description: |-
+            (optional) How long the client should wait for autocomplete results to come back (milliseconds),
+            before giving up and not displaying an autocomplete result at all.
+
+            This applies on multi-line completions, which are based on intent-detection when e.g. a code block
+            is being completed, e.g. `func parseURL(url string) {<completion>`
+
+            Note: similar to hidden Cody client config option `cody.autocomplete.advanced.timeout.multiline`
+            If user has configured that, it will be respected instead of this.
+        chatTopK:
+          type: number
+          format: double
+          nullable: true
+          description: (optional) model parameters to use for the chat feature
+        chatTopP:
+          type: number
+          format: double
+          nullable: true
+        chatTemperature:
+          type: number
+          format: double
+          nullable: true
+          minimum: 0
+          maximum: 2
+        chatMaxTokens:
+          type: integer
+          format: uint32
+        autoCompleteTopK:
+          type: number
+          format: double
+          nullable: true
+          description: (optional) model parameters to use for the autocomplete feature
+        autoCompleteTopP:
+          type: number
+          format: double
+          nullable: true
+        autoCompleteTemperature:
+          type: number
+          format: double
+          nullable: true
+          minimum: 0
+          maximum: 2
+        autoCompleteSinglelineMaxTokens:
+          type: integer
+          format: uint32
+          minimum: 0
+        autoCompleteMultilineMaxTokens:
+          type: integer
+          format: uint32
+          minimum: 0
+        editTopK:
+          type: number
+          format: double
+          nullable: true
+          description: (optional) model parameters to use for the edit feature
+        editTopP:
+          type: number
+          format: double
+          nullable: true
+        editTemperature:
+          type: number
+          format: double
+          nullable: true
+          minimum: 0
+          maximum: 2
+        editMaxTokens:
+          type: integer
+          format: uint32
+          minimum: 0
+      description: |-
+        Client-side model configuration used when the model is backed by an OpenAI-compatible API
+        provider.
     CompletionMessage:
       type: object
       required:
-        - speaker
-        - text
+        - role
+        - content
       properties:
-        speaker:
+        role:
           type: string
-          description: |-
-            The speaker of the message.
-
-            For historical reasons, this API uses Anthropic naming conventions.  The
-            valid values are:
-
-            - "human" (Anthropic) instead of "role: user" (OpenAI).
-            - "assistant", same as OpenAI's "role: assistant"
-            - "system", same as OpenAI's "role: system"
-        text:
-          type: string
-          description: The text of the message.
+          enum:
+            - user
+            - assistant
+            - system
+        content:
+          anyOf:
+            - type: string
+            - type: array
+              items:
+                $ref: '#/components/schemas/MessageContentPart'
     CompletionRequest:
       type: object
       required:
@@ -221,7 +359,7 @@ components:
             Note that our models may stop before reaching this maximum. This parameter only specifies the absolute maximum number of tokens to generate.
         temperature:
           type: number
-          format: float
+          format: double
           description: |-
             Amount of randomness injected into the response.
 
@@ -253,7 +391,7 @@ components:
             Recommended for advanced use cases only. You usually only need to use temperature.
         topP:
           type: number
-          format: float
+          format: double
           description: |-
             Use nucleus sampling.
 
@@ -284,6 +422,7 @@ components:
       enum:
         - 1
         - 2
+        - 3
     CompletionResponse:
       type: object
       properties:
@@ -346,6 +485,54 @@ components:
           type: string
         codeCompletion:
           type: string
+    FilePart:
+      type: object
+      required:
+        - type
+        - file
+      properties:
+        type:
+          type: string
+          enum:
+            - file
+        file:
+          type: object
+          properties:
+            uri:
+              type: string
+            language_id:
+              type: string
+            content:
+              type: string
+          required:
+            - uri
+      allOf:
+        - $ref: '#/components/schemas/MessageContentPart'
+    ImagePart:
+      type: object
+      required:
+        - type
+        - image_url
+      properties:
+        type:
+          type: string
+          enum:
+            - image_url
+        image_url:
+          type: object
+          properties:
+            url:
+              type: string
+            detail:
+              type: string
+              enum:
+                - low
+                - high
+                - auto
+          required:
+            - url
+      allOf:
+        - $ref: '#/components/schemas/MessageContentPart'
     Logprobs:
       type: object
       required:
@@ -362,19 +549,33 @@ components:
           type: array
           items:
             type: number
-            format: float
+            format: double
         top_logprobs:
           type: array
           items:
             type: object
             additionalProperties:
               type: number
-              format: float
+              format: double
         text_offset:
           type: array
           items:
             type: integer
             format: int32
+    MessageContentPart:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+      discriminator:
+        propertyName: type
+        mapping:
+          text: '#/components/schemas/TextPart'
+          image_url: '#/components/schemas/ImagePart'
+          file: '#/components/schemas/FilePart'
+          repo: '#/components/schemas/RepoPart'
     Model:
       type: object
       required:
@@ -405,6 +606,11 @@ components:
           $ref: '#/components/schemas/ModelTier'
         contextWindow:
           $ref: '#/components/schemas/ContextWindow'
+        clientSideConfig:
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/ClientSideModelConfig'
+          nullable: true
     ModelCapability:
       type: string
       enum:
@@ -436,9 +642,10 @@ components:
     ModelCategory:
       type: string
       enum:
-        - accuracy
         - balanced
         - speed
+        - other
+        - accuracy
     ModelStatus:
       type: string
       enum:
@@ -462,6 +669,42 @@ components:
           type: string
         displayName:
           type: string
+    RepoPart:
+      type: object
+      required:
+        - type
+        - repo
+      properties:
+        type:
+          type: string
+          enum:
+            - repo
+        repo:
+          type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            filePatterns:
+              type: array
+              items:
+                type: string
+      allOf:
+        - $ref: '#/components/schemas/MessageContentPart'
+    TextPart:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum:
+            - text
+        text:
+          type: string
+      allOf:
+        - $ref: '#/components/schemas/MessageContentPart'
     Versions:
       type: string
       enum:
@@ -470,3 +713,27 @@ components:
         - V5_7
         - V5_8
         - Latest
+  securitySchemes:
+    SourcegraphTokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: |-
+        Authenticate to Sourcegraph APIs with the HTTP header "Authorization" using
+        the following formatting:
+
+        ```
+        Authorization: token TOKEN_VALUE
+        ```
+        In most cases, a Sourcegraph access token looks like this `sgp_asdadakjaaaaaaabbbbbbssswwwwaaal2131kasdaakkkkkq21asdasaa`.
+
+        In rare cases, you may encounter other kinds of token formats, which are documented in the table below.
+
+        |                  Token Name                  |                                   Description                                    |            Type            |    Regular Expression     |                         |
+        | -------------------------------------------- | -------------------------------------------------------------------------------- | -------------------------- | ------------------------- | ----------------------- |
+        | Sourcegraph Access Token (v3)                | Token used to access the Sourcegraph GraphQL API                                 | User-generated             | `sgp_(?:[a-fA-F0-9]{16}\|local)_[a-fA-F0-9]{40}` |
+        | Sourcegraph Access Token (v2, deprecated)    | Token used to access the Sourcegraph GraphQL API                                 | User-generated             | `sgp_[a-fA-F0-9]{40}`     |                         |
+        | Sourcegraph Access Token (v1, deprecated)    | Token used to access the Sourcegraph GraphQL API                                 | User-generated             | `[a-fA-F0-9]{40}`         |                         |
+        | Sourcegraph Dotcom User Gateway Access Token | Token used to grant sourcegraph.com users access to Cody                         | Backend (not user-visible) | `sgd_[a-fA-F0-9]{64}`     |                         |
+        | Sourcegraph License Key Token                | Token used for product subscriptions, derived from a Sourcegraph license key     | Backend (not user-visible) | `slk_[a-fA-F0-9]{64}`     |                         |
+        | Sourcegraph Enterprise subscription (aka "product subscription") Token       | Token used for Enterprise subscriptions, derived from a Sourcegraph license key | Backend (not user-visible) | `sgs_[a-fA-F0-9]{64}`     |                         |
