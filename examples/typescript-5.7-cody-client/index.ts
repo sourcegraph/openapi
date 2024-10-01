@@ -2,6 +2,7 @@ import { Command } from "commander";
 import dotenv from "dotenv";
 import openai from "openai";
 import type { Credentials } from "./Credentials";
+import { CodyClient } from "./client";
 import { codyContext, formatContext } from "./codyContext";
 import { review } from "./review";
 import { searchCommits } from "./search";
@@ -21,13 +22,27 @@ const credentials: Credentials = {
   accessToken: token,
   endpoint,
 };
+const cody = new CodyClient(credentials);
 
 const llmClient = new openai.OpenAI({
   baseURL: `${endpoint}/.api/llm`,
   apiKey: token,
 });
 
+const sonnet35 = "anthropic::2023-06-01::claude-3.5-sonnet";
 const command = new Command("cody")
+  .addCommand(
+    new Command("complete")
+      .option("--model <model>", "the model to use", sonnet35)
+      .option("--message <message>", "the chat message to send")
+      .action(async ({ model, message }) => {
+        const reply = await cody.getCompletions({
+          model: model,
+          message,
+        });
+        console.log({ reply });
+      })
+  )
   .addCommand(
     new Command("models").action(async () => {
       const models = await llmClient.models.list();
@@ -46,11 +61,7 @@ Example usage:
       .requiredOption("--review-instruction <instruction>")
       .option("--context-lines <num>", "context lines", "3")
       .option("--max-commits <num>", "maximum number of commits to review", "2")
-      .option(
-        "--model <model>",
-        "LLM model to use",
-        "anthropic::2023-06-01::claude-3.5-sonnet"
-      )
+      .option("--model <model>", "LLM model to use", sonnet35)
       .action(
         async ({
           searchQuery,
@@ -67,7 +78,7 @@ Example usage:
           const diagnostics = await Promise.all(
             commits.slice(0, Number.parseInt(maxCommits, 10)).map((commit) =>
               review(
-                llmClient,
+                cody,
                 {
                   ...credentials,
                   model,

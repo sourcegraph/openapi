@@ -1,5 +1,6 @@
 import type OpenAI from "openai";
 import type { Credentials } from "./Credentials";
+import type { CodyClient } from "./client";
 import type { CommitSearchResult } from "./search";
 
 export interface ReviewParams extends Credentials {
@@ -14,19 +15,14 @@ export interface Diagnostic {
 }
 
 export async function review(
-  client: OpenAI,
+  client: CodyClient,
   params: ReviewParams,
   commit: CommitSearchResult
 ): Promise<Diagnostic[]> {
   console.log(`Reviewing commit: ${commit.label}`);
-  const completion = await client.chat.completions.create({
+  const completion = await client.getCompletions({
     model: params.model,
-    max_tokens: 4000,
-    stream: false,
-    messages: [
-      {
-        role: "user",
-        content: `
+    message: `
 You are a helpful coding assistant.
 
 <AUTHOR>${commit.authorName}</AUTHOR>
@@ -47,11 +43,8 @@ Act on the instruction. For example, if it says produce a diff to fix the bug, p
 come up with a test case, print the test case here. Formatted as markdown.
 </DIAGNOSTIC>
 `,
-      },
-    ],
   });
-  const reply = completion.choices[0].message.content ?? "";
-  return parseDiagnostic(params, commit, reply);
+  return parseDiagnostic(params, commit, completion);
 }
 
 function parseDiagnostic(
