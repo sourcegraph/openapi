@@ -5,17 +5,40 @@ def code_reviewer(context: dict) -> str:
     with open('context.json', 'a') as f:
         json.dump(context, f)
         f.write('\n')
-    # provider: dict = context['providers']
-    # provider_id: str = provider['id']  # ex. openai:gpt-4o or bedrock:anthropic.claude-3-sonnet-20240229-v1:0
-    # with open(f'context-{provider_id}.json', 'w') as f:
-    #     f.write(json.dumps(context))
-    # provider_label: str | None = provider.get('label') # exists if set in promptfoo config.
-    variables: dict = context['vars'] # access the test case variables
-    dir = variables['dir']
+    variables: dict = context['vars']
+    instruction = "List all the functions defined in the above files."
+    return format_directory(variables['dir'], instruction)
+
+def generate_java_test(context: dict) -> str:
+    variables: dict = context['vars']
+    instruction = """Write a single JUnit 5 test case for the code in the above files.
+
+                     The quality of this test case will be measured by
+                     - Whether it compiles
+                     - Whether the test passes
+                     - A mutation testing score
+                     A good test cases compiles successfully, passes, and has a high mutation testing score.
+
+                     Rules of thumb:
+                     - Make sure to create separate test cases for separate features.
+                     - It's OK to create multiple test files, one test file per main file.
+
+                     In the name of the test file, include the enclosing directory names. For example, the path src/main/java/foo/Foo.java
+                     should have an accompanying test file src/test/java/foo/FooTest.java
+
+                     Print the response in the following XML format:
+                     <TEST_FILE filename="$NAME_OF_THE_TEST_FILE">
+                     $CONTENTS_OF_THE_TEST_FILE
+                     </TEST_FILE>
+                     """
+    dir = os.path.join(variables['dir'], 'src', 'main', 'java')
+    return format_directory(dir, instruction)
+
+def format_directory(dir: str, instruction: str) -> str:
     prompt = []
     for file, content in walk_dir(dir):
         prompt.append(format_context_file(file, content))
-    prompt.append("List all the functions defined in the above files.")
+    prompt.append(instruction)
     return '\n'.join(prompt)
 
 def format_context_file(filename: str, content: str) -> str:

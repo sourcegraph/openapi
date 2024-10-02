@@ -6,12 +6,12 @@ prompts:
 
 providers:
   - "exec: node complete.js claude-3.5-sonnet"
-  # - "exec: node complete.js gemini-1.5-pro"
+  - "exec: node complete.js gemini-1.5-pro"
   - "exec: node complete.js gpt-4o"
 
 tests:
   - vars:
-      dir: test-dir/typescript
+      dir: test-dir/javascript
   - vars:
       dir: test-dir/java
 

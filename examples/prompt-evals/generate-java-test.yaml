@@ -1,0 +1,19 @@
+description: "Generate unit tests"
+
+prompts:
+  - file://prompt.py:generate_java_test
+
+providers:
+  - "exec: node complete.js claude-3.5-sonnet"
+  - "exec: node complete.js gemini-1.5-pro"
+  - "exec: node complete.js gpt-4o"
+
+tests:
+  - vars:
+      dir: generate-test/java-mvn
+    assert:
+    - type: python
+      value: file://assert_java_test.py
+      config:
+        outputLengthLimit: 10
+

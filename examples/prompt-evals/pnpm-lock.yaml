@@ -12,8 +12,8 @@ importers:
         specifier: ^22.7.4
         version: 22.7.4
       promptfoo:
-        specifier: ^0.90.3
-        version: 0.90.3(@aws-sdk/client-bedrock-runtime@3.658.1)(@azure/identity@4.4.1)(@azure/openai-assistants@1.0.0-beta.6)(@fal-ai/serverless-client@0.14.3)(@ibm-generative-ai/node-sdk@2.0.6(@langchain/core@0.3.5(openai@4.66.1(zod@3.23.8))))(@playwright/browser-chromium@1.47.2)(@smithy/node-http-handler@3.2.4)(@types/react@18.3.10)(babel-plugin-macros@3.1.0)(google-auth-library@9.14.1)(langfuse@3.26.0)(node-sql-parser@5.3.2)(playwright@1.47.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^0.91.0
+        version: 0.91.1(@aws-sdk/client-bedrock-runtime@3.658.1)(@azure/identity@4.4.1)(@azure/openai-assistants@1.0.0-beta.6)(@fal-ai/serverless-client@0.14.3)(@ibm-generative-ai/node-sdk@2.0.6(@langchain/core@0.3.5(openai@4.66.1(zod@3.23.8))))(@playwright/browser-chromium@1.47.2)(@smithy/node-http-handler@3.2.4)(@types/react@18.3.10)(babel-plugin-macros@3.1.0)(google-auth-library@9.14.1)(langfuse@3.26.0)(node-sql-parser@5.3.2)(playwright@1.47.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       tsx:
         specifier: ^4.19.1
         version: 4.19.1
@@ -2136,8 +2136,8 @@ packages:
     resolution: {integrity: sha512-cdGef/drWFoydD1JsMzuFf8100nZl+GT+yacc2bEced5f9Rjk4z+WtFUTBu9PhOi9j/jfmBPu0mMEY4wIdAF8A==}
     engines: {node: '>= 0.6.0'}
 
-  promptfoo@0.90.3:
-    resolution: {integrity: sha512-AG7RbH5AdUjTVpkcr8BswRXKpbM1lDJP5sAEcxWlwhUxjVp72z4ruWaE0zCQNb1IJzUw97vJlE/nhxNbUOpyyA==}
+  promptfoo@0.91.1:
+    resolution: {integrity: sha512-g2l4fp8A/CULaU9PJfXOFkn7ExBFHS6u2kN5muj4WyK2sG/K69Rlrv0YzdkNwByPHj7ZtejagCqgLWLPPUmkwQ==}
     engines: {node: '>=18.0.0'}
     hasBin: true
     peerDependencies:
@@ -5157,7 +5157,7 @@ snapshots:
 
   process@0.11.10: {}
 
-  promptfoo@0.90.3(@aws-sdk/client-bedrock-runtime@3.658.1)(@azure/identity@4.4.1)(@azure/openai-assistants@1.0.0-beta.6)(@fal-ai/serverless-client@0.14.3)(@ibm-generative-ai/node-sdk@2.0.6(@langchain/core@0.3.5(openai@4.66.1(zod@3.23.8))))(@playwright/browser-chromium@1.47.2)(@smithy/node-http-handler@3.2.4)(@types/react@18.3.10)(babel-plugin-macros@3.1.0)(google-auth-library@9.14.1)(langfuse@3.26.0)(node-sql-parser@5.3.2)(playwright@1.47.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  promptfoo@0.91.1(@aws-sdk/client-bedrock-runtime@3.658.1)(@azure/identity@4.4.1)(@azure/openai-assistants@1.0.0-beta.6)(@fal-ai/serverless-client@0.14.3)(@ibm-generative-ai/node-sdk@2.0.6(@langchain/core@0.3.5(openai@4.66.1(zod@3.23.8))))(@playwright/browser-chromium@1.47.2)(@smithy/node-http-handler@3.2.4)(@types/react@18.3.10)(babel-plugin-macros@3.1.0)(google-auth-library@9.14.1)(langfuse@3.26.0)(node-sql-parser@5.3.2)(playwright@1.47.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       '@anthropic-ai/sdk': 0.27.3
       '@apidevtools/json-schema-ref-parser': 11.7.0
