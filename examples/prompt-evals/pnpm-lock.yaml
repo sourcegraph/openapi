@@ -8,6 +8,9 @@ importers:
 
   .:
     devDependencies:
+      '@types/node':
+        specifier: ^22.7.4
+        version: 22.7.4
       promptfoo:
         specifier: ^0.90.3
         version: 0.90.3(@aws-sdk/client-bedrock-runtime@3.658.1)(@azure/identity@4.4.1)(@azure/openai-assistants@1.0.0-beta.6)(@fal-ai/serverless-client@0.14.3)(@ibm-generative-ai/node-sdk@2.0.6(@langchain/core@0.3.5(openai@4.66.1(zod@3.23.8))))(@playwright/browser-chromium@1.47.2)(@smithy/node-http-handler@3.2.4)(@types/react@18.3.10)(babel-plugin-macros@3.1.0)(google-auth-library@9.14.1)(langfuse@3.26.0)(node-sql-parser@5.3.2)(playwright@1.47.2)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -3917,7 +3920,7 @@ snapshots:
 
   '@types/node-fetch@2.6.11':
     dependencies:
-      '@types/node': 18.19.54
+      '@types/node': 22.7.4
       form-data: 4.0.0
 
   '@types/node@18.19.54':

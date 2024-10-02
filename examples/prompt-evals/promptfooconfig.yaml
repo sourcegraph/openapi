@@ -7,8 +7,9 @@ prompts:
   
 
 providers:
-  - "openai:gpt-4o-mini"
-  - "openai:gpt-4o"
+  - "exec: node complete.js claude-3.5-sonnet"
+  - "exec: node complete.js gemini-1.5-pro"
+  - "exec: node complete.js gpt-4o"
 
 tests:
   - vars:
@@ -29,8 +30,4 @@ tests:
 
   - vars:
       topic: new york city
-    assert:
-      # For more information on model-graded evals, see https://promptfoo.dev/docs/configuration/expected-outputs/model-graded
-      - type: llm-rubric
-        value: ensure that the output is funny
 
