@@ -6,7 +6,7 @@ prompts:
 
 providers:
   - "exec: node complete.js claude-3.5-sonnet"
-  - "exec: node complete.js gemini-1.5-pro"
+  # - "exec: node complete.js gemini-1.5-pro"
   - "exec: node complete.js gpt-4o"
 
 tests:
