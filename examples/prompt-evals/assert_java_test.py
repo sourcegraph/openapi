@@ -1,9 +1,11 @@
+import os
 import re
 from typing import Dict, Union, TypedDict, List, Optional, Tuple
 from dataclasses import dataclass
 import tempfile
 import shutil
 import subprocess
+
 
 @dataclass
 class GradingResult:
@@ -13,8 +15,10 @@ class GradingResult:
     component_results: Optional[List["GradingResult"]] = None
     named_scores: Optional[Dict[str, float]] = None
 
+
 def score_bool(ok: bool) -> float:
     return 1.0 if ok else 0.0
+
 
 def boolean_grading_result(name: str, ok: bool, stdout: str) -> GradingResult:
     reason = name if ok else f"{name} - {stdout}"
@@ -24,14 +28,33 @@ def boolean_grading_result(name: str, ok: bool, stdout: str) -> GradingResult:
         "reason": reason,
     }
 
+
 def get_assert(output: str, context) -> Union[bool, float, GradingResult]:
-    prototype_dir = context['vars']['dir']
+    prototype_dir = context["vars"]["dir"]
     temp_dir = create_temp_dir(prototype_dir)
     test_cases = parse_test_cases(output)
     write_test_cases(temp_dir, test_cases)
-    install_ok, install_out = exec_command(temp_dir, ["mvn", "install", "-DskipTests=true", "-Dmaven.compile.skip=true"])
-    compile_ok, compile_out = exec_command(temp_dir, ["mvn", "test-compile"]) if install_ok else False
+    install_ok, install_out = exec_command(
+        temp_dir, ["mvn", "install", "-DskipTests=true", "-Dmaven.compile.skip=true"]
+    )
+    compile_ok, compile_out = (
+        exec_command(temp_dir, ["mvn", "test-compile"]) if install_ok else False
+    )
     test_ok, test_out = exec_command(temp_dir, ["mvn", "test"]) if compile_ok else False
+    mutation_ok, mutation_out = (
+        exec_command(
+            temp_dir,
+            [
+                "mvn",
+                "test-compile",
+                "org.pitest:pitest-maven:mutationCoverage",
+                "-DexportLineCoverage",
+            ],
+        )
+        if compile_ok
+        else False
+    )
+    mutation_score = parse_mutation_coverage(temp_dir)
     final_pass_scores = [install_ok, compile_ok, test_ok]
     max_score = len(final_pass_scores)
     final_score = sum([1.0 if ok else 0.0 for ok in final_pass_scores]) / max_score
@@ -43,8 +66,25 @@ def get_assert(output: str, context) -> Union[bool, float, GradingResult]:
             boolean_grading_result("mvn install", install_ok, install_out),
             boolean_grading_result("mvn test-compile", compile_ok, compile_out),
             boolean_grading_result("mvn test", test_ok, test_out),
+            {
+                "pass": mutation_ok,
+                "score": mutation_score,
+                "reason": f"Mutation Score {temp_dir}" if mutation_ok else f"Mutation Score error -  {mutation_out}",
+            }
         ],
     }
+
+def parse_mutation_coverage(temp_dir: str) -> float:
+    with open(os.path.join(temp_dir, "target", "pit-reports", "index.html"), "r") as file:
+        content = file.read()
+    
+    match = re.search(r'coverage_complete width-(\d+)', content)
+    if match:
+        percentage = int(match.group(1))
+        return percentage / 100.0
+    else:
+        return 0.0
+
 
 def create_temp_dir(prototype_dir: str) -> str:
     temp_dir = tempfile.mkdtemp()
@@ -70,21 +110,22 @@ def parse_test_cases(output: str) -> list[TestCase]:
 
     return test_cases
 
+
 def write_test_cases(temp_dir: str, test_cases: List[TestCase]) -> None:
     for test_case in test_cases:
         if isinstance(test_case, str):
             raise ValueError(test_case)
-        print("TEST_CASE")
-        print(test_case)
-        print(test_case.keys())
         filename = test_case["filename"]
         code = test_case["code"]
-        with open(f"{temp_dir}/{filename}", "w") as file:
+        with open(os.path.join(temp_dir, filename), "w") as file:
             file.write(code)
+
 
 def exec_command(working_dir: str, args: List[str]) -> Tuple[bool, str]:
     try:
-        subprocess.run(args, cwd=working_dir, check=True, capture_output=True, text=True)
+        subprocess.run(
+            args, cwd=working_dir, check=True, capture_output=True, text=True
+        )
         return (True, "")
     except subprocess.CalledProcessError as e:
         print(f"Error executing command: {' '.join(args)}")
