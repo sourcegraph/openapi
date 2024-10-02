@@ -1,10 +1,14 @@
 import os
 import json
-import sys
 
 def code_reviewer(context: dict) -> str:
+    with open('context.json', 'a') as f:
+        json.dump(context, f)
+        f.write('\n')
     # provider: dict = context['providers']
     # provider_id: str = provider['id']  # ex. openai:gpt-4o or bedrock:anthropic.claude-3-sonnet-20240229-v1:0
+    # with open(f'context-{provider_id}.json', 'w') as f:
+    #     f.write(json.dumps(context))
     # provider_label: str | None = provider.get('label') # exists if set in promptfoo config.
     variables: dict = context['vars'] # access the test case variables
     dir = variables['dir']
@@ -28,5 +32,8 @@ def walk_dir(dir: str) -> list:
     return file_content_pairs
 
 if __name__ == "__main__":
+    with open('context.json', 'r') as f:
+        context = json.loads(f.readline())
+    # If you specify a `function_name` in the provider string, it will run that function
     # If you don't specify a `function_name` in the provider string, it will run the main
-    print(code_reviewer(json.loads(sys.argv[1])))
+    print(code_reviewer(context))
