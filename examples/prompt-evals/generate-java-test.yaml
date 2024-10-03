@@ -1,4 +1,8 @@
-description: "Generate unit tests"
+# To run this file:
+#   pnpm exec promptfoo eval --config generate-java-test.yaml
+# To view the results, keep a separate terminal open and run:
+#   pnpm exec promptfoo view --yes
+description: "Generate Java unit tests"
 
 prompts:
   - file://prompt.py:generate_java_test

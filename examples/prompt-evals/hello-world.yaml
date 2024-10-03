@@ -1,5 +1,8 @@
-# Learn more about building a configuration: https://promptfoo.dev/docs/configuration/guide
-description: "My eval"
+# To run this file:
+#   pnpm exec promptfoo eval --config hello-world.yaml
+# To view the results, keep a separate terminal open and run:
+#   pnpm exec promptfoo view --yes
+description: "Hello world - list functions"
 
 prompts:
   - file://prompt.py:code_reviewer
