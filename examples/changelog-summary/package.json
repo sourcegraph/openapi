@@ -1,0 +1,19 @@
+{
+  "name": "changelog-summary",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/diff": "^5.2.3"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "diff": "^7.0.0"
+  },
+  "scripts": {
+    "bun:start": "bun run index.ts",
+    "start": "node --experimental-strip-types index.ts"
+  }
+}
