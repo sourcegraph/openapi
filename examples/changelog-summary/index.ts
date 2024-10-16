@@ -108,16 +108,29 @@ const commits = await fetchGraphQL<RepositoryComparisonCommitsResponse>(query, {
 	repoName: "github.com/sourcegraph/cody",
 });
 
+interface Animal {
+	sound(): string;
+}
+class Dog implements Animal {
+	sound(): string {
+		return "woof";
+	}
+}
+
+const dog = new Dog();
+console.log(dog.sound());
+
 function unifiedDiff(commits: RepositoryComparisonCommitsResponse): string {
 	const out: string[] = [];
 	for (const commit of commits.data.repository.comparison.commits.nodes) {
-		for (const fileDiff of commit.diff.fileDiffs.nodes) {
+		for (const file of commit.diff.fileDiffs.nodes) {
 			const patch = createTwoFilesPatch(
-				fileDiff?.oldFile?.path ?? "",
-				fileDiff?.newFile?.path ?? "",
-				fileDiff?.oldFile?.content ?? "",
-				fileDiff?.newFile?.content ?? "",
+				file?.oldFile?.path ?? "",
+				file?.newFile?.path ?? "",
+				file?.oldFile?.content ?? "",
+				file?.newFile?.content ?? "",
 			);
+			console.log(patch);
 			out.push(patch);
 		}
 	}
