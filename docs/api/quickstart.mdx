@@ -24,13 +24,30 @@ SG_API_HOST=https://your-host.sourcegraph.com
 
 ## List the supported models
 
-Get a list of the models supported by the API.
+Use the command line and `curl` to get a list of the models supported by the API.
 
 ```sh
 curl --request GET \
   --url $SG_API_HOST/.api/llm/models \
   --header 'Accept: application/json' \
   --header "Authorization: token $SG_API_ACCESS_TOKEN"
+```
+
+The output should look something like this (pipe it into `jq -r` to make it easier to read):
+
+```sh
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "anthropic::2023-06-01::claude-3.5-sonnet",
+      "object": "model",
+      "created": 0,
+      "owned_by": "anthropic"
+    },
+    ... other models
+  ]
+}
 ```
 
 Now choose an appropriate model for your use case. A good all around model, balancing speed an power, is Anthropic Claude 3.5 Sonnet.
@@ -40,6 +57,8 @@ MODEL=anthropic::2023-06-01::claude-3.5-sonnet
 ```
 
 ## Send a completion request
+
+Use the command line and `curl` to send a completion request to the API.
 
 ```sh
 curl --request POST \
@@ -52,6 +71,33 @@ curl --request POST \
     "model": "'"${MODEL}"'",,
     "max_tokens": 1000
   }'
+```
+
+The output should look something like this (pipe it into `jq -r` to make it easier to read):
+
+```sh
+{
+  "id": "chat-1f6342b0-6f04-460f-b154-989ce6da920d",
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Here's the command to create a git branch from the command line:\n\ngit branch <branch-name>",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1729587345,
+  "model": "anthropic::2023-06-01::claude-3.5-sonnet",
+  "system_fingerprint": "",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 0,
+    "prompt_tokens": 0,
+    "total_tokens": 0
+  }
+}
 ```
 
 ## Congratulations!
