@@ -1,0 +1,107 @@
+# Quickstart for the API
+
+Get started by sending your first API requests from the command line in 10 minutes or less.
+
+## Introduction
+
+In this guide, you'll learn how to list models and sent your first completion request to the Sourcegraph API from the command line using `curl`.
+
+## Set up your environment
+
+Create an access token by following the [instructions](https://sourcegraph.com/docs/cli/how-tos/creating_an_access_token). We recommend that you create separate access tokens for each use, so that you can revoke access without affecting other uses.
+
+Set the `SG_API_ACCESS_TOKEN` environment variable to the access token you created in the previous step.
+
+```sh
+SG_API_ACCESS_TOKEN=<token acquired from the Sourcegraph web UI>
+```
+
+Also, set the `SG_API_HOST` environment variable to the hostname of the Sourcegraph instance you want to use.
+
+```sh
+SG_API_HOST=https://your-host.sourcegraph.com
+```
+
+## List the supported models
+
+Use the command line and `curl` to get a list of the models supported by the API.
+
+```sh
+curl --request GET \
+  --url $SG_API_HOST/.api/llm/models \
+  --header 'Accept: application/json' \
+  --header "Authorization: token $SG_API_ACCESS_TOKEN"
+```
+
+The output should look something like this (pipe it into `jq -r` to make it easier to read):
+
+```sh
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "anthropic::2023-06-01::claude-3.5-sonnet",
+      "object": "model",
+      "created": 0,
+      "owned_by": "anthropic"
+    },
+    ... other models
+  ]
+}
+```
+
+Now choose an appropriate model for your use case. A good all around model, balancing speed an power, is Anthropic Claude 3.5 Sonnet.
+
+```sh
+MODEL=anthropic::2023-06-01::claude-3.5-sonnet
+```
+
+## Send a completion request
+
+Use the command line and `curl` to send a completion request to the API.
+
+```sh
+curl --request POST \
+  --url $SG_API_HOST/.api/llm/chat/completions \
+  --header 'Accept: application/json' \
+  --header 'Content-Type: application/json' \
+  --header "Authorization: token $SG_API_ACCESS_TOKEN" \
+  --data '{
+    "messages": [{"role": "user", "content": "Output just the command to create a git branch from the command line"}],
+    "model": "'"${MODEL}"'",,
+    "max_tokens": 1000
+  }'
+```
+
+The output should look something like this (pipe it into `jq -r` to make it easier to read):
+
+```sh
+{
+  "id": "chat-1f6342b0-6f04-460f-b154-989ce6da920d",
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Here's the command to create a git branch from the command line:\n\ngit branch <branch-name>",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1729587345,
+  "model": "anthropic::2023-06-01::claude-3.5-sonnet",
+  "system_fingerprint": "",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 0,
+    "prompt_tokens": 0,
+    "total_tokens": 0
+  }
+}
+```
+
+## Congratulations!
+
+You've successfully sent your first API request from the command line! 🎉🎉
+
+You can now explore the API further by reading the [examples](TODO). For detailed information on how to use the API, check out the [API documentation](TODO).
