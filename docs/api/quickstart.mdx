@@ -67,7 +67,7 @@ curl --request POST \
   --header 'Content-Type: application/json' \
   --header "Authorization: token $SG_API_ACCESS_TOKEN" \
   --data '{
-    "messages": [{"role": "user", "content": "How do I create a github branch?"}],
+    "messages": [{"role": "user", "content": "Output just the command to create a git branch from the command line"}],
     "model": "'"${MODEL}"'",,
     "max_tokens": 1000
   }'
