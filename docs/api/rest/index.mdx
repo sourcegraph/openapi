@@ -1,0 +1,310 @@
+# Sourcegraph REST API
+With the Sourcegraph REST API, you can programmatically access the features of Sourcegraph. This API focuses on Cody functionality such as LLM chat and context.
+
+All requests require an access token. Create an access token by following the [instructions](https://sourcegraph.com/docs/cli/how-tos/creating_an_access_token). We recommend that you create separate access tokens for each use, so that you can revoke access without affecting other uses.
+
+Throughout this documentation, we use the following environment variables to refer to the Sourcegraph instance and access token:
+
+- `SRC_ENDPOINT`: The hostname of the Sourcegraph instance you want to use.
+- `SRC_ACCESS_TOKEN`: The access token you created.
+
+<Callout type="tip">Pipe the examples to `| jq -r` for easier to read output.</Callout>
+
+## `GET /.api/llm/models`
+
+Lists the currently available models, and provides basic information about each one such as the owner and availability.
+
+### Example
+
+Request:
+
+```sh
+curl --request GET \
+  --url $SRC_ENDPOINT/.api/llm/models \
+  --header "Accept: application/json" \
+  --header "Authorization: token $SRC_ACCESS_TOKEN"
+```
+
+Response:
+
+```sh
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "anthropic::2023-06-01::claude-3.5-sonnet",
+      "object": "model",
+      "created": 0,
+      "owned_by": "anthropic"
+    },
+    ... Other models
+  ]
+}
+```
+
+### Request
+
+Headers
+
+- `Authorization: token $SRC_ACCESS_TOKEN`
+
+### Response: application/json
+
+Response code: `200` if the request is successful.
+
+| Field         | Type            | Required | Description                                                              |
+|---------------|-----------------|----------|--------------------------------------------------------------------------|
+| `object`      | `string`        | Yes      | Allowed value: `list`                                                    |
+| `data`        | `array[object]` | Yes      | Describes an OpenAI model offering that can be used with the API         |
+| `data[].id`   | `string`        | Yes      | The model identifier, which can be referenced in the API endpoints       |
+| `data[].object` | `string`      | Yes      | The object type, which is always "model". <br/> Allowed value: `model`         |
+| `data[].created` | `integer<int64>` | Yes  | The Unix timestamp (in seconds) when the model was created. <br/> `>= -9007199254740991` `<= 9007199254740991` |
+| `data[].owned_by` | `string`    | Yes      | The organization that owns the model.                                    |
+
+## `GET /.api/llm/models/{modelId}`
+
+Retrieves a model instance, providing basic information about the model such as the owner and permissioning.
+
+### Example
+
+Request:
+
+```sh
+curl --request GET \
+  --url $SRC_ENDPOINT/.api/llm/models/openai::2024-02-01::gpt-4o \
+  --header 'Accept: application/json' \
+  --header "Authorization: token $SRC_ACCESS_TOKEN"
+```
+
+Response:
+
+```sh
+{
+  "id": "openai::2024-02-01::gpt-4o",
+  "object": "model",
+  "created": 0,
+  "owned_by": "openai"
+}
+```
+
+### Request
+
+Headers
+
+- `Authorization: token $SRC_ACCESS_TOKEN`
+
+URL parameters
+
+- `modelId`: The model identifier
+
+### Response: application/json
+
+Response code: `200` if the request is successful.
+
+| Field           | Type            | Required | Description                                                              |
+|-----------------|-----------------|----------|--------------------------------------------------------------------------|
+| `object`        | `string`        | Yes      | Allowed value: `list`                                                    |
+| `data`          | `array[object]` | Yes      | Describes an OpenAI model offering that can be used with the API         |
+| `data[].id`     | `string`        | Yes      | The model identifier, which can be referenced in the API endpoints       |
+| `data[].object` | `string`        | Yes      | The object type, which is always "model". <br/> Allowed value: `model`   |
+| `data[].created`| `integer<int64>`| Yes      | The Unix timestamp (in seconds) when the model was created. <br/> `>= -9007199254740991` `<= 9007199254740991` |
+| `data[].owned_by`| `string`       | Yes      | The organization that owns the model.                                    |
+
+## `POST /.api/llm/chat/completions`
+
+Send a structured list of input messages with text and/or image content, and the model will generate the next message in the conversation.
+
+### Example
+
+Request:
+
+```sh
+curl --request POST \
+  --url $SRC_ENDPOINT/.api/llm/chat/completions \
+  --header 'Accept: application/json' \
+  --header 'Content-Type: application/json' \
+  --header "Authorization: token $SRC_ACCESS_TOKEN" \
+  --data '{
+    "messages": [{"role": "user", "content": "Output just the command to create a git branch from the command line"}],
+    "model": "'"${MODEL}"'",,
+    "max_tokens": 1000
+  }'
+```
+
+<Callout type="warning">If you get an `unsupported chat model` error, please ensure you are using a valid model ID. You can find valid model IDs by using the [GET /.api/llm/models](#get-apillmmodels) endpoint.</Callout>
+
+Response:
+
+```sh
+{
+  "id": "chat-1f6342b0-6f04-460f-b154-989ce6da920d",
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "index": 0,
+      "message": {
+        "content": "Here's the command to create a git branch from the command line:\n\ngit branch <branch-name>",
+        "role": "assistant"
+      }
+    }
+  ],
+  "created": 1729587345,
+  "model": "anthropic::2023-06-01::claude-3.5-sonnet",
+  "system_fingerprint": "",
+  "object": "chat.completion",
+  "usage": {
+    "completion_tokens": 0,
+    "prompt_tokens": 0,
+    "total_tokens": 0
+  }
+}
+```
+
+### Request
+
+Headers
+
+- `Authorization: token $SRC_ACCESS_TOKEN`
+
+Body: application/json
+
+| Field                      | Type                        | Required | Description                                                                           |
+|----------------------------|-----------------------------|----------|---------------------------------------------------------------------------------------|
+| `messages`                 | `array[object]`             | Yes      | A list of messages to start the thread with                                           |
+| `messages[].role`          | `string`                    | Yes      | Allowed values: `user` `assistant` `system`                                           |
+| `messages[].content`       | `string` or `array[object]` | Yes      | The content of the message                                                            |
+| `model`                    | `string`                    | Yes      | A model name using the syntax `${ProviderID}::${APIVersionID}::${ModelID}`            |
+| `max_tokens`               | `integer<int32>` or `null`  | No       | The maximum number of tokens that can be generated in the completion. <br/> `<= 8000` |
+| `temperature`              | `number<float>` or `null`   | No       | Sampling temperature. Higher values lead to more randomness. Varies by model.         |
+| `top_p`                    | `number<float>` or `null`   | No       | Alternative to temperature. Varies by model.                                          |
+| `stop`                     | `string` or `array[string]` | No       | Sequences where the API will stop generating further tokens. Varies by model.         |
+
+### Response: application/json
+
+Response code: `200` if the request is successful.
+
+| Field                      | Type                        | Required | Description                                                                           |
+|----------------------------|-----------------------------|----------|---------------------------------------------------------------------------------------|
+| `id`                       | `string`                    | Yes      |                                                                                       |
+| `choices`                  | `array[object]`             | Yes      |                                                                                       |
+| `choices[].finish_reason`  | `string`                    | Yes      |                                                                                       |
+| `choices[].index`          | `integer<int32>`            | Yes      |                                                                                       |
+| `choices[].message`        | `object`                    | Yes      | The LLM response content                                                              |
+| `choices[].logprobs`       | `object`                    | Yes      |                                                                                       |
+| `created`                  | `integer<int64>`            | Yes      | Range: `>= -9007199254740991` and `<= 9007199254740991`                               |
+| `model`                    | `string`                    | Yes      | A model name using the syntax `${ProviderID}::${APIVersionID}::${ModelID}`            |
+| `service_tier`             | `string` or `null`          | Yes      |                                                                                       |
+| `system_fingerprint`       | `string` or `null`          | Yes      |                                                                                       |
+| `object`                   | `string`                    | Yes      | Allowed value: `object`                                                               |
+| `usage`                    | `object`                    | Yes      |                                                                                       |
+| `usage.completion_tokens`  | `integer<int32>`            | Yes      |                                                                                       |
+| `usage.prompt_tokens`      | `integer<int32>`            | Yes      |                                                                                       |
+| `usage.total_tokens`       | `integer<int32>`            | Yes      |                                                                                       |
+| `messages`                 | `array[object]`             | Yes      | A list of messages to start the thread with                                           |
+| `messages[].role`          | `string`                    | Yes      | Allowed values: `user`, `assistant`, `system`                                         |
+| `messages[].content`       | `string`                    | Yes      | The content of the message                                                            |
+| `max_tokens`               | `integer<int32>` or `null`  | No       | The maximum number of tokens that can be generated in the completion. <br/> `<= 8000` |
+| `logit_bias`               | `object` or `null`          | No       |                                                                                       |
+| `logprobs`                 | `boolean` or `null`         | No       |                                                                                       |
+| `top_logprobs`             | `integer<int32>` or `null`  | No       |                                                                                       |
+| `n`                        | `integer<int32>` or `null`  | No       |                                                                                       |
+| `frequency_penalty`        | `number<double>` or `null`  | No       |                                                                                       |
+| `presence_penalty`         | `number<double>` or `null`  | No       |                                                                                       |
+| `response_format`          | `string` or `null`          | No       | Allowed values: `text`, `json_object`, `null`                                         |
+| `seed`                     | `integer<int64>` or `null`  | No       | Range: `>= -9007199254740991` and `<= 9007199254740991`            c                 |
+| `service_tier`             | `string` or `null`          | No       |                                                                                       |
+| `stop`                     | `string`                    | No       |                                                                                       |
+| `stream`                   | `boolean` or `null`         | No       |                                                                                       |
+| `stream_options`           | `object`                    | No       |                                                                                       |
+| `stream_options.include_usage` | `boolean` or `null`     | No       |                                                                                       |
+| `temperature`              | `number<float>` or `null`   | No       |                                                                                       |
+| `top_p`                    | `number<float>` or `null`   | No       |                                                                                       |
+| `user`                     | `string` or `null`          | No       |                                                                                       |
+
+## `POST /.api/cody/context`
+
+Send a natural language query with a list of repositories, and Cody locates related code examples from those repos.
+
+### Example
+
+Request:
+
+```sh
+curl --request POST \
+  --url $SRC_ENDPOINT/.api/cody/context \
+  --header "Accept: application/json" \
+  --header "Authorization: token $SRC_ACCESS_TOKEN" \
+  --header "Content-Type: application/json" \
+  --data '{
+  "query": "What does ChatController do?",
+  "repos": [
+    {
+      "name": "github.com/sourcegraph/cody"
+    }
+  ]
+}'
+```
+
+Response:
+
+```sh
+{
+  "results": [
+    {
+      "blob": {
+        "path": "vscode/src/chat/chat-view/ChatController.ts",
+        "repository": {
+          "id": "UmVwb3NpdG9yeToyNzU5OQ==",
+          "name": "github.com/sourcegraph/cody"
+        },
+        "commit": {
+          "oid": "fdcc8a185b21c81d1987bc1daf2c29cec3d19b06"
+        },
+        "url": "/github.com/sourcegraph/cody@fdcc8a185b21c81d1987bc1daf2c29cec3d19b06/-/blob/vscode/src/chat/chat-view/ChatController.ts"
+      },
+      "startLine": 156,
+      "endLine": 181,
+      "chunkContent": "\n/**\n * ChatController is the view controller class for the chat panel.\n * It handles all events sent from the view, keeps track of the underlying chat model,\n * and interacts with the rest of the extension.\n *\n * Its methods are grouped into the following sections, each of which is demarcated\n * by a comment block (search for \"// #region \"):\n *\n * 1. top-level view action handlers\n * 2. view updaters\n * 3. chat request lifecycle methods\n * 4. session management\n * 5. webview container management\n * 6. other public accessors and mutators\n *\n * The following invariants should be maintained:\n * 1. top-level view action handlers\n *    a. should all follow the handle$ACTION naming convention\n *    b. should be private (with the existing exceptions)\n * 2. view updaters\n *    a. should all follow the post$ACTION naming convention\n *    b. should NOT mutate model state\n * 3. Keep the public interface of this class small in order to\n *    avoid tight coupling with other classes. If communication\n"
+    },
+    ... many other results
+  ]
+}
+```
+
+### Request
+
+Headers
+
+- `Authorization: token $SRC_ACCESS_TOKEN`
+
+Body: application/json
+
+| Field                | Type              | Required | Description                                                                           |
+|----------------------|-------------------|----------|---------------------------------------------------------------------------------------|
+| `repos`              | `array[object]`   | No       | The list of repos to search through.                                                  |
+| `repos[].name`       | `string`          | No       | The name of the repository.                                                           |
+| `repos[].id`         | `string`          | No       | The ID of the repository.                                                             |
+| `query`              | `string`          | Yes      | The natural language query to find relevant context from the provided list of repos.  |
+| `codeResultsCount`   | `integer<int32>`  | No       | The number of results to return from source code (example: Python or TypeScript). <br/> Range: `>= 0` and `<= 100`. <br/> Default: `15` |
+| `textResultsCount`   | `integer<int32>`  | No       | The number of results to return from text sources like Markdown. <br/> Range: `>= 0` and `<= 100`. <br/> Default: `5` |
+| `filePatterns`       | `array[string]`   | No       | An optional list of file patterns used to filter the results. The patterns are regex strings. For a file chunk to be returned as a context result, the path must match at least one of these patterns. |
+| `version`            | `string`          | No       | The version number of the context API. Allowed values: `1.0`, `2.0`. Default: `1.0`   |
+
+### Response: application/json
+
+Response code: `200` if the request is successful.
+
+| Field                            | Type            | Required  | Description |
+|----------------------------------|-----------------|-----------|-------------|
+| `results`                        | array[object]   | Yes       |             |
+| `results[].blob`                 | object          | Yes       |             |
+| `results[].blob.path`            | string          | Yes       |             |
+| `results[].blob.repository`      | object          | Yes       |             |
+| `results[].blob.repository.id`   | string          | Yes       |             |
+| `results[].blob.repository.name` | string          | Yes       |             |
+| `results[].blob.commit`          | object          | Yes       |             |
+| `results[].blob.commit.oid`      | string          | Yes       |             |
+| `results[].blob.url`             | string          | Yes       |             |
+| `results[].startLine`            | integer         | Yes       |             |
+| `results[].endLine`              | integer         | Yes       |             |
+| `results[].chunkContent`         | string          | Yes       |             |
