@@ -73,6 +73,8 @@ curl --request POST \
   }'
 ```
 
+<Callout type="warning">If you get an `unsupported chat model` error, please ensure you are using a valide model ID. You can find valid model IDs by using the [GET /.api/llm/models](/api/rest#get-apillmmodels) endpoint.</Callout>
+
 The output should look something like this (pipe it into `jq -r` to make it easier to read):
 
 ```sh
@@ -104,4 +106,10 @@ The output should look something like this (pipe it into `jq -r` to make it easi
 
 You've successfully sent your first API request from the command line! 🎉🎉
 
-You can now explore the API further by reading the [examples](TODO). For detailed information on how to use the API, check out the [API documentation](TODO).
+You can now explore the API further by reading the [examples](TODO). 
+
+For detailed information on how to use the API, check out the API documentation:
+
+- [GraphQL](/api/graphql) - GraphQL API which provides programmatic access to code search, git metadata, and repository information
+- [Stream](/api/stream_api) - GraphQL API which enables code search with streaming results
+- [REST](/api/rest) - REST API which provides programmatic conversations with AI language models and access to context for those conversations
